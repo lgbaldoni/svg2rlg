@@ -8,8 +8,8 @@ setup(
     version = '0.4.0',
     author='Runar Tenfjord',
     author_email = 'runar.tenfjord@gmail.com',
-    maintainer = 'Steve Arnold'
-    maintainer_email = 'nerdboy@gentoo.org'
+    maintainer = 'Steve Arnold',
+    maintainer_email = 'nerdboy@gentoo.org',
     license = 'BSD',
     url = 'https://github.com/sarnold/svg2rlg',
     download_url = 'http://pypi.python.org/pypi/svg2rlg/',
@@ -28,6 +28,7 @@ setup(
     ],
 
     description = 'Convert SVG to Reportlab drawing',
+    long_description_content_type='text/x-rst',
     long_description = '''**svg2rlg** is a small utility to convert SVG to reportlab graphics.
 
 The authors motivation was to have a more robust handling of

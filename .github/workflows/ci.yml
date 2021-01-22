@@ -16,5 +16,12 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
+      - Install deps
+        run: |
+          python -m pip install -U pip
+          pip install tox tox-gh-actions
       - name: Run tests
-        run: python -m unittest discover
+        run: tox -e py
+      - name: Run tests
+        run: |
+          tox -e deploy
