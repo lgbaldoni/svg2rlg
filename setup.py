@@ -5,11 +5,13 @@ from setuptools import setup
 setup(
     name = 'svg2rlg',
     py_modules = ['svg2rlg'],
-    version = '0.3',
+    version = '0.4.0',
     author='Runar Tenfjord',
     author_email = 'runar.tenfjord@gmail.com',
+    maintainer = 'Steve Arnold'
+    maintainer_email = 'nerdboy@gentoo.org'
     license = 'BSD',
-    url = 'http://code.google.com/p/svg2rlg/',
+    url = 'https://github.com/sarnold/svg2rlg',
     download_url = 'http://pypi.python.org/pypi/svg2rlg/',
     requires = ['reportlab'],
     entry_points = {

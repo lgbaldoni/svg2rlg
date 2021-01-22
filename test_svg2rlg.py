@@ -5,7 +5,7 @@ svg2rlg is a tool to convert from SVG to reportlab graphics.
 
 License : BSD
 
-version 0.3
+version 0.4.0
 """
 
 import sys
