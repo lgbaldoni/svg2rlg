@@ -19,64 +19,6 @@ from svg2rlg import svg2rlg
 
 #import svglib
 USESVGLIB = False
-
-
-class Log(wx.PyLog):
-    """
-    Class to send information to the statusbar.
-    The statusbar text is reseted afther a delay when
-    no pos is used in write method.
-    """
-    def __init__(self, target, pos = 0, delay = 5000):
-        wx.PyLog.__init__(self)
-
-        # Do we have a statusbar or normal controll
-        self.statusbar = False
-        if isinstance(target, wx.StatusBar):
-            self.statusbar = True
-
-        self.target = target
-        self.pos = pos
-        self.delay = delay
-
-        # Timer to clear text
-        self.timer = wx.Timer(self.target, id=1)
-        wx.EVT_TIMER(self.target, self.timer.GetId(), self.clear)
-
-    def DoLogString(self, message, timeStamp):
-        # This is called with wx.LogMessage etc.
-        self.Write(message)
-
-    def Write(self, text, pos = None):
-        if self.statusbar:
-            # Statusbar widget
-            if pos is None:
-                self.target.SetStatusText(text, self.pos)
-
-                if self.timer.IsRunning():
-                    self.timer.Stop()
-
-                self.timer.Start(self.delay, oneShot=True)
-
-            else:
-                self.target.SetStatusText(text, pos)
-        else:
-            # Normal controll
-            self.target.SetLabel(_("Message: %s") % text)
-
-            if self.timer.IsRunning():
-                self.timer.Stop()
-
-            self.timer.Start(self.delay, oneShot=True)
-
-    def clear(self, event = None):
-        if self.statusbar:
-            # Statusbar widget
-            self.target.SetStatusText("", self.pos)
-        else:
-            # Normal controll
-            self.target.SetLabel("")
-
 TIMEOUT = 450
 SCALELIM = 10
 
@@ -163,10 +105,11 @@ class MainWindow(wx.Frame):
         self.SetMinSize((640,480))
 
         # Statusbar
-        self.statusbar = self.CreateStatusBar(1, wx.ST_SIZEGRIP)
+        self.statusbar = self.CreateStatusBar(1, wx.STB_SIZEGRIP)
 
-         # Create log
-        self.log = Log(self.statusbar, 0)
+        # Timer for clearing the notification in statusbar
+        self.timer = wx.Timer(self)
+        wx.EvtHandler.Bind(self, wx.EVT_TIMER, self._ClearNotification, id=self.timer.GetId())
 
         # GUI layout
         sizer = wx.BoxSizer(wx.VERTICAL)
@@ -178,7 +121,11 @@ class MainWindow(wx.Frame):
         widget = wx.StaticText(self, -1, "Test name: ")
         hsizer.Add(widget, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, self.BORDER)
 
-        self.TEST_NAMES = glob.glob(r"test-suite\svg\*.svg")
+        svgfiles = os.path.join("test-suite", "svg", "*.svg")
+        self.TEST_NAMES = glob.glob(svgfiles)
+        if len(self.TEST_NAMES) == 0:
+            wx.LogDebug("Unable to locate test images (%s). Aborting." % svgfiles)
+            wx.Exit()
 
         widget = wx.Choice(self, -1, choices = self.TEST_NAMES)
         widget.SetSelection(0)
@@ -228,10 +175,10 @@ class MainWindow(wx.Frame):
             img = wx.Image(imgpath)
             self.rightimage.SetImage(img)
         else:
-            self.log.Write('Could not load image: "%s"' % name)
+            wx.LogError('Could not load image: "%s"' % name)
 
         # render svg file
-        start = time.clock()
+        start = time.time()
 
         try:
             if USESVGLIB:
@@ -249,9 +196,9 @@ class MainWindow(wx.Frame):
             dlg.Destroy()
             return
 
-        delta = time.clock() - start
+        delta = time.time() - start
 
-        self.log.Write('Rendered in %.2f seconds' % delta)
+        self.LogAndNotify('Rendered in %.2f seconds' % delta)
 
         fh, tmp = tempfile.mkstemp(suffix = '.png', prefix = "svg2rlg_")
         os.close(fh)
@@ -265,11 +212,21 @@ class MainWindow(wx.Frame):
 
         self.leftimage.SetImage(img)
 
+    def LogAndNotify(self, text, delay = 5000):
+        wx.LogDebug(text)
+        if self.timer.IsRunning():
+            self.timer.Stop()
+
+        wx.LogStatus(text)
+        self.timer.Start(delay, oneShot=True)
+
+    def _ClearNotification(self, event = None):
+        wx.LogStatus("")
 
 if __name__ == "__main__":
     wx.InitAllImageHandlers()
 
-    app = wx.PySimpleApp(0)
+    app = wx.App()
 
     mw = MainWindow()
     mw.Show()
